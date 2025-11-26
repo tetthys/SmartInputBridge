@@ -1,0 +1,16 @@
+{
+  "name": "smartinput-bridge",
+  "version": "0.0.1",
+  "description": "SPA back/redirect helpers with SmartInput-compatible middleware for Express.",
+  "main": "src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "joi": "^17.13.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
