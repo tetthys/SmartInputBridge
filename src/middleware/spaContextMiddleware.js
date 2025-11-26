@@ -1,7 +1,7 @@
 // src/middleware/spaContextMiddleware.js
-
-// This middleware extracts SPA-related headers and stores them on req.spa.
-// It does not depend on any external libraries.
+//
+// Extract SPA-related headers and store them on req.spa.
+//
 
 function spaContextMiddleware(req, _res, next) {
   const originUrl = req.header && req.header("x-spa-origin");

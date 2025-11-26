@@ -1,6 +1,14 @@
 // src/middleware/spaResponseMiddleware.js
+//
+// Provides SPA-style response builders:
+//   res.back().withInput().send()
+//   res.back().withoutInput().send()
+//   res.redirectTo('home').withInput().send()
+//   res.redirectTo('home').withoutInput().send()
+//
 
-// Minimal front route map (can be customized by users if needed)
+// Minimal front route map.
+// Users can override this object after import if needed.
 const frontRoutes = {
   home: "/",
   dashboard: "/dashboard",
@@ -8,7 +16,7 @@ const frontRoutes = {
   settings: "/settings",
 };
 
-// Build a unified SPA response body
+// Build SPA response body
 function buildSpaResponse(state) {
   const body = {
     ok: state.status < 400,
@@ -26,7 +34,6 @@ function buildSpaResponse(state) {
     }
   }
 
-  if (state.smartinput) body.smartinput = state.smartinput;
   if (state.meta) body.meta = state.meta;
 
   return body;
@@ -41,13 +48,12 @@ function createSpaBuilder(req, res, baseNavigation) {
     errors: undefined,
     navigation: baseNavigation || undefined,
     oldInput: undefined, // undefined: untouched, null: withoutInput, object: withInput
-    smartinput: undefined,
     meta: undefined,
   };
 
   const api = {
     // withInput(input?)
-    // If input is not provided, it uses req.body.payload by default.
+    // If input is not provided, default to req.body.payload
     withInput: function (input) {
       const payload =
         typeof input !== "undefined"
@@ -60,12 +66,6 @@ function createSpaBuilder(req, res, baseNavigation) {
     // withoutInput()
     withoutInput: function () {
       state.oldInput = null;
-      return api;
-    },
-
-    // Attach SmartInput payload
-    withSmartInput: function (smartPayload) {
-      state.smartinput = smartPayload;
       return api;
     },
 
@@ -104,10 +104,9 @@ function createSpaBuilder(req, res, baseNavigation) {
   return api;
 }
 
-// Middleware that extends res with back()/redirectTo() builders
+// Middleware that extends res with back()/redirectTo()
 function spaResponseMiddleware(req, res, next) {
   // back()
-  // usage: return res.back().withInput().send();
   res.back = function () {
     const navigation = {
       action: "back",
@@ -119,9 +118,6 @@ function spaResponseMiddleware(req, res, next) {
   };
 
   // redirect()->to(...)
-  // usage:
-  //   return res.redirectTo("home").withInput().send();
-  //   return res.redirectTo("/custom").withoutInput().send();
   res.redirectTo = function (routeKeyOrPath) {
     const isKey = !!frontRoutes[routeKeyOrPath];
     const resolvedUrl = isKey ? frontRoutes[routeKeyOrPath] : routeKeyOrPath;
@@ -133,25 +129,6 @@ function spaResponseMiddleware(req, res, next) {
     };
 
     return createSpaBuilder(req, res, navigation);
-  };
-
-  // Simple helpers (optional)
-  res.spaOk = function (data) {
-    const body = buildSpaResponse({
-      status: 200,
-      data: data,
-    });
-    res.json(body);
-  };
-
-  res.spaError = function (message, errors, status) {
-    const code = status || 400;
-    const body = buildSpaResponse({
-      status: code,
-      message: message,
-      errors: errors,
-    });
-    res.status(code).json(body);
   };
 
   next();
